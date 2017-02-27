@@ -10,21 +10,15 @@ import RPi.GPIO as GPIO
 import numpy as np
 import Adafruit_CharLCD as LCD
 
-#GPIO.setmode(GPIO.BCM)
 # initialize LCD
-flag = -1
-while (flag == -1):
-    try:
-        print "Initializing LCD..."
-        lcd = LCD.Adafruit_CharLCDPlate()
-        flag = 0
-    except IOError:
-        flag = -1
-print "Found LCD."
+try:
+    lcd = LCD.Adafruit_CharLCDPlate()
+except IOError:
+    flag = 12
 
 # hsv tuple boundaries for the different colors
-red_bounds= ([0, 150, 150], [10, 255, 255])
-green_bounds = ([45, 100, 100], [75, 255, 255])
+red_bounds= [([0, 100, 100], [10, 255, 255]), ([170, 100, 100], [180, 255, 255])]
+green_bounds = [([45, 100, 100], [75, 255, 255])]
 
 # constants to write to arduino for each color and distance
 MAX_DISTANCE = 100
@@ -36,8 +30,9 @@ GREEN = MAX_DISTANCE + 1
 RESOLUTION = (640, 480)
 
 # ultrasonic sensor setup
-TRIG = 23
-ECHO = 24 
+TRIG = 16
+ECHO = 18
+#GPIO.setmode(GPIO.BOARD)        #ultrasonic sensor setup
 GPIO.setup(TRIG,GPIO.OUT) #trigger
 GPIO.setup(ECHO,GPIO.IN)  #echo
 GPIO.output(TRIG,False)   #initial settings
@@ -46,36 +41,6 @@ GPIO.output(TRIG,False)   #initial settings
 bus = smbus.SMBus(1)
 # This is the address we setup in the Arduino Program
 address = 0x04
-
-
-
-################ COMPUTER VISION ########################
-
-# take a picture without any of the preview stuff
-def take_picture_simple(filename):
-    with picamera.PiCamera() as camera:
-        camera.resolution = RESOLUTION
-        camera.capture(filename)
-        return cv2.imread(filename)
-
-# take picture with preview
-def take_picture(filename):
-    with picamera.PiCamera() as camera:
-        # capture image
-        #camera.awb_mode = 'flash'
-        camera.resolution = RESOLUTION
-        camera.start_preview()
-        time.sleep(2) # warm up the camera
-        camera.capture(filename)
-        camera.stop_preview()
-        return cv2.imread(filename)
-
-# get the image, as an rgb, greyscale, and hsv
-def get_image():
-    filename = "temp.jpg"
-    take_picture_simple(filename)
-    image = cv2.imread(filename, 1)
-
 
 ################ COMPUTER VISION ########################
 
@@ -117,10 +82,15 @@ def get_morphs(image):
 
 # given an image, masks that image based on some color
 def get_color_mask(image, hsv, color_bounds):
-    (lower, upper) = color_bounds 
-    lower = np.array(lower, dtype = "uint8")
-    upper = np.array(upper, dtype = "uint8")
-    mask = cv2.inRange(hsv, lower, upper)
+    mask = np.zeros(hsv.shape)
+    for bound in color_bounds:
+        (lower, upper) = bound 
+        lower = np.array(lower, dtype = "uint8")
+        upper = np.array(upper, dtype = "uint8")
+        
+        new_mask = cv2.inRange(hsv, lower, upper)
+        cv2.bitwise_or(mask, new_mask, mask)
+        #mask = mask | new_mask 
     mask = get_morphs(mask)[1]    # get the closing morph
     #output = cv2.bitwise_and(hsv, hsv, mask = mask)
     return mask
@@ -130,7 +100,8 @@ def contains_color(image, hsv, color_string, color_bounds):
     mask = get_color_mask(image, hsv, color_bounds)
     # if a significant area contains the color,
     # then return true
-    if (np.sum(mask) > 1000000):
+    print color_string, np.sum(mask)
+    if (np.sum(mask) > 800000):
         return True
     return False    
 
@@ -171,7 +142,7 @@ def measure_distance():
 # checks to see if red_bounds or green_bounds light detected
 def process_image(image, hsv, prev_result):
     result = prev_result # set previous result by default if no color is found
-    if (contains_color(image, hsv, "GREEN", green_bounds)):
+    if (contains_color(image, hsv, "GREEN", green_bounds)): 
         result = GREEN 
     elif(contains_color(image, hsv, "RED", red_bounds)):
         result = RED 
@@ -227,7 +198,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     result = process_image(image, hsv, prev_result)
     writeNumber(int(result))
     prev_result = result
-    #time.sleep(.1)    
+    time.sleep(.1)    
 
     distance = measure_distance() 
     if distance < MAX_DISTANCE: #if anything is found
@@ -238,17 +209,16 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
 
     # calculate the speed of the motor for displaying   
     speed = distance * .106
-    print "result %d, speed %d, distance %d" % (int(result), speed, distance)
-    try:
+    try: 
         lcd.clear()
-        #lcd.message("PATRICK")
-        lcd.message('Dist cm:%d\nSpd rads:%d' % (int(distance), int(speed)))
+        lcd.message('Distance in cm: %d\nSpeed of motor in rad/s: %d' % (int(distance), int(speed)))
     except IOError:
-        flag = 123
+        flag = 1     #optional flag to signal your code to resend or something
+
+
 
     # show the frame
-    #MASK = get_color_mask(image, hsv, red_bounds)
-    #cv2.imshow("Frame", MASK)
+    #cv2.imshow("Frame", image)
     key = cv2.waitKey(1)
     
     # clear the stream in preparation for the next frame
@@ -257,3 +227,4 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
         break
+    

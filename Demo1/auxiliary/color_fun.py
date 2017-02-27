@@ -8,7 +8,16 @@ import sys # for command line arguments
 red = ([150, 120, 120], [180, 255, 255])
 green = ([45, 60, 60], [70, 255, 255])
 
-
+# get the countours of an image
+def draw_contours(canny):
+	(_, contours, _) = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+	contours = sorted(contours, key = cv2.contourArea, reverse = True)[:1]
+	for c in contours:
+		epsilon = 0.1*cv2.arcLength(c, True)
+		approx = cv2.approxPolyDP(c, epsilon, True)
+		cv2.drawContours(canny, approx, -1, (0, 255, 0), 3)
+	display_image("canny", canny)
+	
 # make a resized image half the size
 def get_half_image(img):
 	return cv2.resize(img, None, fx=.5, fy=.5, interpolation = cv2.INTER_AREA)
@@ -58,4 +67,6 @@ def do_color_stuff(image, hsv, color_bounds):
 
 ## MAIN STUFF
 image, grey, hsv = get_image()
-do_color_stuff(image, hsv, green)
+display_image("canny", image)
+#do_color_stuff(image, hsv, green)
+draw_contours(grey)
