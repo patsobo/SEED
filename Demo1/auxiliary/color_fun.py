@@ -16,7 +16,7 @@ def draw_contours(canny):
 		epsilon = 0.1*cv2.arcLength(c, True)
 		approx = cv2.approxPolyDP(c, epsilon, True)
 		cv2.drawContours(canny, approx, -1, (0, 255, 0), 3)
-	display_image("canny", canny)
+		display_image("canny", canny)
 	
 # make a resized image half the size
 def get_half_image(img):
@@ -67,6 +67,6 @@ def do_color_stuff(image, hsv, color_bounds):
 
 ## MAIN STUFF
 image, grey, hsv = get_image()
-display_image("canny", image)
+display_image("canny", grey)
 #do_color_stuff(image, hsv, green)
 draw_contours(grey)
