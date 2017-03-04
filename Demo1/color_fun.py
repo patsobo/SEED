@@ -11,20 +11,62 @@ green = ([45, 60, 60], [70, 255, 255])
 # get the countours of an image
 def draw_contours(canny, original):
     (_, contours, _) = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    contours = sorted(contours, key = cv2.contourArea, reverse = True)[:1]
+    
+    # grab the first whatever number of contours for detection
+    num_contours = 1
+    if (len(contours) >= 3):
+        num_contours = 3
+    contours = sorted(contours, key = cv2.contourArea, reverse = True)[:num_contours]
+
+    # iterate through the contours and find the octagon
     for c in contours:
         approx = get_approx(c, 8)    # 8 edges b/c it's a stop sign
-        cv2.drawContours(original, [approx], -1, (0, 255, 0), 3)
-        display_image("canny", original)
-  
+        if (is_sign(approx)):
+            break
+    cv2.drawContours(original, [approx], -1, (0, 255, 0), 3)
+    display_image("canny", original)
+
+# if the length of all the edges is ~ equal, then it's a sign 
+def is_sign(points):
+    size = len(points)
+    distances = []
+    # apologies for not being pythonic
+    for i in range(size):
+        distance = 100000
+        # technically this checks all but the last points, but w/e
+        for j in range(i + 1, size):
+            if (get_distance(points[i][0], points[j][0]) < distance):
+                distance = get_distance(points[i][0], points[j][0])
+        if (distance != 100000):
+            distances.append(distance)
+   
+    distances = sorted(distances)
+    print ("DISTANCES")    
+    for distance in distances:
+        print distance 
+    # now check for ~ equal distances
+    # here it just checks if the last distance is about equal to all
+    # the others
+    largest = distances[-1]
+    for i in range(len(distances) - 1):
+        if (abs(distances[i] - largest) > 1.5*distances[i]):
+            return False            
+    return True 
+
+def get_distance(point1, point2):
+    diff1 = abs(point2[0] - point1[0])
+    diff2 = abs(point2[1] - point1[1])
+
+    return np.sqrt(np.power(diff1, 2) + np.power(diff2, 2))
+ 
 # given number of vertices, get the approx shape thing
 # as a note, decrementing the multiplier seems to work better
 def get_approx(contour, num_edges):
-    multiplier = 2
+    multiplier = 0
     epsilon = multiplier*cv2.arcLength(contour, True)
     approx = cv2.approxPolyDP(contour, epsilon, True)
     while (len(approx) != num_edges):
-        multiplier -= 0.001 
+        multiplier += 0.001 
         epsilon = multiplier*cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
     return approx
@@ -79,7 +121,7 @@ def do_color_stuff(image, hsv, color_bounds):
 
 ## MAIN STUFF
 image, grey, hsv = get_image()
-original = cv2.imread("images/Stop.jpg", 1)
+original = cv2.imread("images/Stop_warped.jpg", 1)
 display_image("canny", grey)
 #do_color_stuff(image, hsv, green)
 draw_contours(grey, original)
