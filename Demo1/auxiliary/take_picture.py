@@ -17,6 +17,6 @@ with picamera.PiCamera() as camera:
 	camera.stop_preview()
 
 	# display image
-	img = cv2.imread(filename)
-	cv2.imshow(filename, img)
-	cv2.waitKey(0)
+	#img = cv2.imread(filename)
+	#cv2.imshow(filename, img)
+	#cv2.waitKey(0)
