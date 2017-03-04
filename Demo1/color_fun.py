@@ -13,18 +13,18 @@ def draw_contours(canny, original):
     (_, contours, _) = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key = cv2.contourArea, reverse = True)[:1]
     for c in contours:
-        approx = get_approx(c, 4)    # 8 edges b/c it's a stop sign
+        approx = get_approx(c, 8)    # 8 edges b/c it's a stop sign
         cv2.drawContours(original, [approx], -1, (0, 255, 0), 3)
         display_image("canny", original)
   
 # given number of vertices, get the approx shape thing
 # as a note, decrementing the multiplier seems to work better
 def get_approx(contour, num_edges):
-    multiplier = 0
+    multiplier = 2
     epsilon = multiplier*cv2.arcLength(contour, True)
     approx = cv2.approxPolyDP(contour, epsilon, True)
     while (len(approx) != num_edges):
-        multiplier += 0.001 
+        multiplier -= 0.001 
         epsilon = multiplier*cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
     return approx
@@ -79,7 +79,7 @@ def do_color_stuff(image, hsv, color_bounds):
 
 ## MAIN STUFF
 image, grey, hsv = get_image()
-original = cv2.imread("../images/Arrow.jpg", 1)
+original = cv2.imread("images/Stop.jpg", 1)
 display_image("canny", grey)
 #do_color_stuff(image, hsv, green)
 draw_contours(grey, original)

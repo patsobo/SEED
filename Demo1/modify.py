@@ -58,7 +58,7 @@ def get_color(image, hsv, color_bounds):
 # of whatever it is you're looking at
 def get_canny(grey):
 	grey = cv2.GaussianBlur(grey, (5, 5), 0)
-	canny = cv2.Canny(grey, 100, 200)
+	canny = cv2.Canny(grey, 100, 250)
 	return canny
 
 # write the image to a jpeg file
