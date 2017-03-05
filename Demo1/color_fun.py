@@ -3,6 +3,7 @@ import cv2
 import picamera
 import numpy as np
 import sys # for command line arguments
+from transform import order_points, four_point_transform    # the imagesearch crap
 
 # hsv tuple boundaries for the different colors
 red = ([150, 120, 120], [180, 255, 255])
@@ -23,6 +24,10 @@ def draw_contours(canny, original):
         approx = get_approx(c, 8)    # 8 edges b/c it's a stop sign
         if (is_sign(approx)):
             break
+
+    crit_points = [approx[0][0], approx[1][0], approx[2][0], approx[3][0]]
+    print approx[:4]
+    original = four_point_transform(original, approx[:4]) 
     cv2.drawContours(original, [approx], -1, (0, 255, 0), 3)
     display_image("canny", original)
 
@@ -41,15 +46,12 @@ def is_sign(points):
             distances.append(distance)
    
     distances = sorted(distances)
-    print ("DISTANCES")    
-    for distance in distances:
-        print distance 
     # now check for ~ equal distances
     # here it just checks if the last distance is about equal to all
     # the others
     largest = distances[-1]
     for i in range(len(distances) - 1):
-        if (abs(distances[i] - largest) > 1.5*distances[i]):
+        if (abs(distances[i] - largest) > 2*distances[i]):
             return False            
     return True 
 
