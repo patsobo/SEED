@@ -21,15 +21,25 @@ def draw_contours(canny, original):
 
     # iterate through the contours and find the octagon
     for c in contours:
-        approx = get_approx(c, 8)    # 8 edges b/c it's a stop sign
+        approx = get_approx(c, 4)    # 8 edges b/c it's a stop sign, 4 for other signs
         if (is_sign(approx)):
             break
 
-    crit_points = [approx[0][0], approx[1][0], approx[2][0], approx[3][0]]
-    print approx[:4]
-    original = four_point_transform(original, approx[:4]) 
+    warped = four_point_transform(original, np.squeeze(approx[:4]))
+    cv2.imwrite("warped.jpg", warped) 
     cv2.drawContours(original, [approx], -1, (0, 255, 0), 3)
-    display_image("canny", original)
+    
+    # draw dots on image
+    for point in np.squeeze(approx[:4]):
+        original = cv2.circle(original, (int(point[0]), int(point[1])), 7, (0, 255, 0), -1)
+
+	# convert to grayscale
+	warped = cv2.cvtColor(warped, cv2.CV_BGR2GRAY)
+
+	# compare against the template left turn image
+	
+
+    display_image("canny", warped)
 
 # if the length of all the edges is ~ equal, then it's a sign 
 def is_sign(points):
@@ -123,7 +133,7 @@ def do_color_stuff(image, hsv, color_bounds):
 
 ## MAIN STUFF
 image, grey, hsv = get_image()
-original = cv2.imread("images/Stop_warped.jpg", 1)
+original = cv2.imread("left_warped.jpg", 1)
 display_image("canny", grey)
 #do_color_stuff(image, hsv, green)
 draw_contours(grey, original)

@@ -1,7 +1,7 @@
 import time
 import cv2
 import picamera
-from PIL import Image, ImageTk
+#from PIL import Image, ImageTk
 import Tkinter as tk
 
 # ask for file name

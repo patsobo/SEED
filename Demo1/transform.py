@@ -28,6 +28,8 @@ def order_points(pts):
     rect[1]=pts[np.argmin(diff)]
     rect[3]=pts[np.argmax(diff)]
 
+    print rect
+
     return rect
 
 def four_point_transform(image, pts):

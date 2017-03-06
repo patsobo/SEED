@@ -56,8 +56,9 @@ def get_color(image, hsv, color_bounds):
 
 # given a greyscale image, use canny edge detection to get a clean image
 # of whatever it is you're looking at
-def get_canny(grey):
+def get_canny(grey, hsv):
 	grey = cv2.GaussianBlur(grey, (5, 5), 0)
+	grey = get_color(grey, hsv, boundaries)
 	canny = cv2.Canny(grey, 100, 350)
 	return canny
 
@@ -95,7 +96,7 @@ elif selection == 3:
 	for morph in morphs_list:
 		display_image("...", morph)
 elif selection == 4:
-	canny = get_canny(grey)
+	canny = get_canny(grey, hsv)
 	save_image("canny", canny)
 	display_image("Canny", canny)
 
