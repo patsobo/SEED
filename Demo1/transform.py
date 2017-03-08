@@ -15,8 +15,6 @@ def order_points(pts):
     # top left point will have the smallest sum
     # bottom right will have the largest sume
     s = pts.sum(axis = 1)
-    print "sum", s
-    print "original", pts
     rect[0] = pts[np.argmin(s)]
     rect[2] = pts[np.argmax(s)]
 
@@ -27,8 +25,6 @@ def order_points(pts):
     diff = np.diff(pts, axis = 1)
     rect[1]=pts[np.argmin(diff)]
     rect[3]=pts[np.argmax(diff)]
-
-    print rect
 
     return rect
 

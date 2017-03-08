@@ -9,15 +9,18 @@ from transform import order_points, four_point_transform    # the imagesearch cr
 red = ([150, 120, 120], [180, 255, 255])
 green = ([45, 60, 60], [70, 255, 255])
 
-# get the countours of an image
-def draw_contours(canny, original):
+def get_contours(canny):
     (_, contours, _) = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     # grab the first whatever number of contours for detection
     num_contours = 1
     if (len(contours) >= 3):
         num_contours = 3
-    contours = sorted(contours, key = cv2.contourArea, reverse = True)[:num_contours]
+    return sorted(contours, key = cv2.contourArea, reverse = True)[:num_contours]
+
+# get the countours of an image
+def draw_contours(canny, original, template):
+    contours = get_contours(canny)
 
     # iterate through the contours and find the octagon
     for c in contours:
@@ -33,12 +36,27 @@ def draw_contours(canny, original):
     for point in np.squeeze(approx[:4]):
         original = cv2.circle(original, (int(point[0]), int(point[1])), 7, (0, 255, 0), -1)
 
-	# convert to grayscale
-	warped = cv2.cvtColor(warped, cv2.CV_BGR2GRAY)
+    # convert to black and white 
+    warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+    ret, warped = cv2.threshold(warped, 90, 255, cv2.THRESH_BINARY) 
 
-	# compare against the template left turn image
-	
-
+    # compare against the template left turn image
+    template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+    ret, template = cv2.threshold(template, 90, 255, cv2.THRESH_BINARY)
+    template = cv2.resize(template, (warped.shape[1], warped.shape[0])) # x and y lengths of your warped image (resize the template)
+    total_pixels = warped.shape[0]*warped.shape[1]
+    match_sum = 0
+    for i in range(0, warped.shape[0] - 1):    
+        for j in range(0, warped.shape[1] - 1):
+            pixel = template[i][j]
+            my_pixel = warped[i][j]
+            if (pixel == my_pixel):
+                match_sum += 1    
+    print match_sum, total_pixels
+    if (float(match_sum) / total_pixels >= 0.85):
+        print "I found a left turn"
+    else:
+        print "I didn't find a left turn"
     display_image("canny", warped)
 
 # if the length of all the edges is ~ equal, then it's a sign 
@@ -77,7 +95,7 @@ def get_approx(contour, num_edges):
     multiplier = 0
     epsilon = multiplier*cv2.arcLength(contour, True)
     approx = cv2.approxPolyDP(contour, epsilon, True)
-    while (len(approx) != num_edges):
+    while (len(approx) != num_edges and multiplier < 2):
         multiplier += 0.001 
         epsilon = multiplier*cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
@@ -132,8 +150,9 @@ def do_color_stuff(image, hsv, color_bounds):
     return
 
 ## MAIN STUFF
-image, grey, hsv = get_image()
-original = cv2.imread("left_warped.jpg", 1)
-display_image("canny", grey)
-#do_color_stuff(image, hsv, green)
-draw_contours(grey, original)
+#image, grey, hsv = get_image()
+#original = cv2.imread("left_warped.jpg", 1)
+#template = cv2.imread("images/Turn_Left.png", 1)
+#display_image("canny", grey)
+##do_color_stuff(image, hsv, green)
+#draw_contours(grey, original, template)
