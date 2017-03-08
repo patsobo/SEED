@@ -8,7 +8,10 @@ import time
 RESOLUTION = (1020, 768)
 STOP_TEMPLATE = cv2.imread("images/Stop.jpg", 1)
 LEFT_TEMPLATE = cv2.imread("images/Turn_Left.png", 1)
+LEFT_POINTS = [(217, 245), (217, 800), (800, 161), (800, 485), (1105, 326)]
 RIGHT_TEMPLATE = cv2.imread("images/Turn_Right.png", 1)
+RIGHT_POINTS = [(480, 161), (480, 488), (175, 326), (217, 800), (1064, 242), (1062, 804)]
+SIGN_DIM = (1280, 962)
 
 def matches_template(warped, template):
     template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
@@ -42,7 +45,7 @@ def determine_sign(image, canny):
     sign = "None"
     if (len(np.squeeze(approx)) >= 4):
         # flatten the image
-        warped = four_point_transform(image, np.squeeze(approx[:4]))
+        M, warped = four_point_transform(image, np.squeeze(approx[:4]))
     
         # convert to black and white 
         warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
@@ -56,8 +59,12 @@ def determine_sign(image, canny):
         elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right" 
         #display_image("canny", warped)
-        draw_contours(image, approx)
-
+        #draw_contours(image, approx)
+        live_dim = (warped.shape[1], warped.shape[0])
+        scale = (SIGN_DIM[0] / live_dim[0], (SIGN_DIM[1] / live_dim[1]))
+        inverse = np.linalg.inv(M)
+        result = np.multiply(
+        print scale, M
     return sign
 
 
