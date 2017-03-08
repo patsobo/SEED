@@ -9,11 +9,12 @@ import numpy as np
 import sys # for command line arguments
 from transform import order_points, four_point_transform    # the imagesearch crap
 
-YELLOW_BOUNDS = ([10, 100, 100], [40, 255, 255])
+YELLOW_BOUNDS = ([5, 80, 80], [45, 255, 255])
 
 # display the resized image
 def display_image(title, image):
     cv2.imshow(title, image)
+    #time.sleep(1)
     cv2.waitKey(0)
     return
 
@@ -35,7 +36,7 @@ def get_contours(canny):
     num_contours = 1
     if (len(contours) >= 3):
         num_contours = 3
-    return sorted(contours, key = cv2.contourArea, reverse = True)[:num_contours]
+    return sorted(contours, key = cv2.contourArea, reverse = True)[:1]
 
 # if the length of all the edges is ~ equal, then it's a sign 
 def is_sign(points):
@@ -50,7 +51,10 @@ def is_sign(points):
                 distance = get_distance(points[i][0], points[j][0])
         if (distance != 100000):
             distances.append(distance)
-   
+  
+    if (len(distances) <= 0):
+        return False
+ 
     distances = sorted(distances)
     # now check for ~ equal distances
     # here it just checks if the last distance is about equal to all

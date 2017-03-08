@@ -15,14 +15,16 @@ def matches_template(warped, template):
     ret, template = cv2.threshold(template, 90, 255, cv2.THRESH_BINARY)
     template = cv2.resize(template, (warped.shape[1], warped.shape[0])) # x and y lengths of your warped image (resize the template)
     total_pixels = warped.shape[0]*warped.shape[1]
+    if (total_pixels < 200*200):
+        return False
     match_sum = 0
-    for i in range(0, warped.shape[0] - 1):    
-        for j in range(0, warped.shape[1] - 1):
+    for i in range(0, warped.shape[0]):    
+        for j in range(0, warped.shape[1]):
             pixel = template[i][j]
             my_pixel = warped[i][j]
             if (pixel == my_pixel):
                 match_sum += 1    
-    return (float(match_sum) / total_pixels >= 0.85)
+    return (float(match_sum) / total_pixels >= 0.75)
 
 def determine_sign(image, canny):
     contours = get_contours(canny)
@@ -30,18 +32,15 @@ def determine_sign(image, canny):
     # iterate through contours and find the rectangles
     for c in contours:
         approx = get_approx(c, 4)    # 4 vertices for rect
-        #if ((len(approx) > 0) and is_sign(approx)):
-        #    break    
 #    if (not approx):    # if you didn't find a rect, it's a stop
 #        for c in contours:
 #            approx = get_approx(c, 8)
 #            if (is_sign(approx)):
 #                break
-
-    draw_contours(image, approx)
-    return "NONE"
+    #draw_contours(image, approx)
+    #draw_contours(image, approx)
     sign = "None"
-    if (approx.any()):
+    if (len(np.squeeze(approx)) >= 4):
         # flatten the image
         warped = four_point_transform(image, np.squeeze(approx[:4]))
     
@@ -49,15 +48,15 @@ def determine_sign(image, canny):
         warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         ret, warped = cv2.threshold(warped, 90, 255, cv2.THRESH_BINARY) 
     
-    
         # compare against the templates
         if (matches_template(warped, STOP_TEMPLATE)):
             sign = "Stop"    
         if (matches_template(warped, LEFT_TEMPLATE)):
             sign = "Left"
-        if (matches_template(warped, RIGHT_TEMPLATE)):
+        elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right" 
         #display_image("canny", warped)
+        draw_contours(image, approx)
 
     return sign
 
@@ -82,6 +81,8 @@ while (True):
     # detect the sign type
     canny = get_canny(grey, hsv)
     sign = determine_sign(image, canny)
+    
+    # calculate the angle
 
     # print out the sign currently displayed 
     print sign
