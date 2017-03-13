@@ -7,7 +7,7 @@ import math
 
 # constants
 RESOLUTION = (1020, 768)
-STOP_TEMPLATE = cv2.imread("images/Stop.png", 1)
+STOP_TEMPLATE = cv2.imread("images/Stop_template.jpg", 1)
 STOP_POINTS = [(217, 245), (217, 800), (800, 161), (800, 485), (1105, 326)]
 LEFT_TEMPLATE = cv2.imread("images/Turn_Left.png", 1)
 LEFT_POINTS = [(480, 161), (480, 488), (175, 326), (217, 800), (1064, 242), (1062, 804)]
@@ -59,7 +59,9 @@ def determine_sign(image, canny):
         # convert to black and white 
         warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         ret, warped = cv2.threshold(warped, 90, 255, cv2.THRESH_BINARY) 
-   
+
+        display_image("warped", warped)
+
         # compare against the templates
         if (matches_template(warped, STOP_TEMPLATE)):
             sign = "Stop"
@@ -79,8 +81,7 @@ def determine_sign(image, canny):
 
         # get center of sign in image
         approx = np.squeeze(approx)
-        center = ((approx[0][0] + approx[1][0]) / 2, (approx[0][1] + approx[1][1]) / 2)
-        points = [center, (0, 0)]
+        x_center = (approx[0][0] + approx[1][0] + approx[2][0] + approx[3][0]) / 4
 #
 #        # scale important lists to match scaled image size
 #        live_dim = (warped.shape[1], warped.shape[0])
@@ -122,10 +123,11 @@ def determine_sign(image, canny):
         # find approximate distance of sign from robot
         # just guess until you get something right
         distance = float(500) / 148000 * area
+        print "DISTANCE: ", distance
 
         # find angle
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
-        difference = center[0] - image_center[0]    # just need x-diff
+        difference = x_center - image_center[0]    # just need x-diff
         if (distance == 0):
             distance = 1
         angle = math.degrees(math.atan(float(difference) / distance))
