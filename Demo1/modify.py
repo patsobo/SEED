@@ -5,7 +5,7 @@ import numpy as np
 import sys # for command line arguments
 
 # tuple for the color yellow, in hsv
-boundaries = ([10, 100, 100], [40, 255, 255])
+boundaries = ([20, 100, 100], [30, 255, 255])
 
 # make a resized image half the size
 def get_half_image(img):

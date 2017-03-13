@@ -39,6 +39,8 @@ def matches_template(warped, template):
 def determine_sign(image, canny):
     contours = get_contours(canny)
 
+    #display_image("canny", canny)
+
     # iterate through contours and find the rectangles
     approx = []
     for c in contours:
@@ -59,8 +61,6 @@ def determine_sign(image, canny):
         # convert to black and white 
         warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         ret, warped = cv2.threshold(warped, 90, 255, cv2.THRESH_BINARY) 
-
-        display_image("warped", warped)
 
         # compare against the templates
         if (matches_template(warped, STOP_TEMPLATE) or matches_template(warped, STOP_TEMPLATE_2)):
@@ -149,6 +149,7 @@ def scale_points(scale, points):
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
 camera.resolution = RESOLUTION
+#camera.awb
 rawCapture = PiRGBArray(camera, size=RESOLUTION)
 
 # allow the camera to warmup
