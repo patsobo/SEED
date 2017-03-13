@@ -8,6 +8,7 @@ import math
 # constants
 RESOLUTION = (1020, 768)
 STOP_TEMPLATE = cv2.imread("images/Stop_template.jpg", 1)
+STOP_TEMPLATE_2 = cv2.imread("images/Stop_template_2.jpg", 1)
 STOP_POINTS = [(217, 245), (217, 800), (800, 161), (800, 485), (1105, 326)]
 LEFT_TEMPLATE = cv2.imread("images/Turn_Left.png", 1)
 LEFT_POINTS = [(480, 161), (480, 488), (175, 326), (217, 800), (1064, 242), (1062, 804)]
@@ -37,7 +38,7 @@ def matches_template(warped, template):
 
 def determine_sign(image, canny):
     contours = get_contours(canny)
-    
+
     # iterate through contours and find the rectangles
     approx = []
     for c in contours:
@@ -47,7 +48,6 @@ def determine_sign(image, canny):
 #            approx = get_approx(c, 8)
 #            if (is_sign(approx)):
 #                break
-    #draw_contours(image, approx)
     #draw_contours(image, approx)
     sign = "None"
     angle = 0
@@ -63,7 +63,7 @@ def determine_sign(image, canny):
         display_image("warped", warped)
 
         # compare against the templates
-        if (matches_template(warped, STOP_TEMPLATE)):
+        if (matches_template(warped, STOP_TEMPLATE) or matches_template(warped, STOP_TEMPLATE_2)):
             sign = "Stop"
             points = STOP_POINTS
             SIGN_DIM  = [100, 100]
@@ -123,7 +123,7 @@ def determine_sign(image, canny):
         # find approximate distance of sign from robot
         # just guess until you get something right
         distance = float(500) / 148000 * area
-        print "DISTANCE: ", distance
+        print "DISTANCE: ", area 
 
         # find angle
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
