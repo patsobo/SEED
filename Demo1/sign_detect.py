@@ -23,9 +23,9 @@ prev_points = -1
 def matches_template(warped, template):
     template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
     ret, template = cv2.threshold(template, 90, 255, cv2.THRESH_BINARY)
-    template = cv2.resize(template, (warped.shape[1], warped.shape[0])) # x and y lengths of your warped image (resize the template)
+    template = cv2.resize(template, None, fx=float(warped.shape[1])/template.shape[1], fy=float(warped.shape[0])/template.shape[0], interpolation=cv2.INTER_AREA) # x and y lengths of your warped image (resize the template)
     total_pixels = warped.shape[0]*warped.shape[1]
-    if (total_pixels < 200*200):
+    if (total_pixels < 2*200):
         return False
     match_sum = 0
     for i in range(0, warped.shape[0]):    
@@ -34,6 +34,7 @@ def matches_template(warped, template):
             my_pixel = warped[i][j]
             if (pixel == my_pixel):
                 match_sum += 1    
+    print "MATHC", float(match_sum) / total_pixels
     return (float(match_sum) / total_pixels >= 0.75)
 
 def determine_sign(image, canny):
@@ -73,7 +74,7 @@ def determine_sign(image, canny):
         elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right"
             points = RIGHT_POINTS
-        #display_image("canny", warped)
+        display_image("canny", warped)
         #draw_contours(image, approx)
 
         # get area of sign in image
@@ -123,7 +124,7 @@ def determine_sign(image, canny):
         # find approximate distance of sign from robot
         # just guess until you get something right
         distance = float(500) / 148000 * area
-        print "DISTANCE: ", area 
+        #print "DISTANCE: ", area 
 
         # find angle
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
@@ -149,7 +150,7 @@ def scale_points(scale, points):
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
 camera.resolution = RESOLUTION
-#camera.awb
+camera.awb_mode = 'flash'
 rawCapture = PiRGBArray(camera, size=RESOLUTION)
 
 # allow the camera to warmup

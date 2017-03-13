@@ -9,7 +9,7 @@ import numpy as np
 import sys # for command line arguments
 from transform import order_points, four_point_transform    # the imagesearch crap
 
-YELLOW_BOUNDS = ([5, 80, 80], [45, 255, 255])
+YELLOW_BOUNDS = ([15, 100, 100], [30, 255, 255])
 
 # display the resized image
 def display_image(title, image):
