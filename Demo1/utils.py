@@ -11,6 +11,14 @@ from transform import order_points, four_point_transform    # the imagesearch cr
 
 YELLOW_BOUNDS = ([15, 100, 100], [30, 255, 255])
 
+# make image go upside-down
+def get_upside_down(image):
+    rows, cols = image.shape[0], image.shape[1]
+
+    M = cv2.getRotationMatrix2D((cols/2, rows/2), 180, 1)
+    return cv2.warpAffine(image, M, (cols, rows))
+
+
 # display the resized image
 def display_image(title, image):
     cv2.imshow(title, image)

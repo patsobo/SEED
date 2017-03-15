@@ -4,6 +4,20 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 import time
 import math
+import Adafruit_CharLCD as LCD
+
+#GPIO.setmode(GPIO.BCM)
+# initialize LCD
+flag = -1
+while (flag == -1):
+    try:
+        print "Initializing LCD..."
+        lcd = LCD.Adafruit_CharLCDPlate()
+        flag = 0
+    except IOError:
+        flag = -1
+print "Found LCD."
+
 
 # constants
 RESOLUTION = (1020, 768)
@@ -34,7 +48,7 @@ def matches_template(warped, template):
             my_pixel = warped[i][j]
             if (pixel == my_pixel):
                 match_sum += 1    
-    print "MATHC", float(match_sum) / total_pixels
+    #print "MATHC", float(match_sum) / total_pixels
     return (float(match_sum) / total_pixels >= 0.75)
 
 def determine_sign(image, canny):
@@ -63,18 +77,22 @@ def determine_sign(image, canny):
         warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         ret, warped = cv2.threshold(warped, 90, 255, cv2.THRESH_BINARY) 
 
+        AREA_CONST = 1
         # compare against the templates
         if (matches_template(warped, STOP_TEMPLATE) or matches_template(warped, STOP_TEMPLATE_2)):
             sign = "Stop"
             points = STOP_POINTS
+            AREA_CONST = 9
             SIGN_DIM  = [100, 100]
         if (matches_template(warped, LEFT_TEMPLATE)):
             sign = "Left"
+            AREA_CONST = 6.45
             points = LEFT_POINTS
         elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right"
+            AREA_CONST = 6.45        
             points = RIGHT_POINTS
-        display_image("canny", warped)
+        #display_image("canny", warped)
         #draw_contours(image, approx)
 
         # get area of sign in image
@@ -123,12 +141,13 @@ def determine_sign(image, canny):
 
         # find approximate distance of sign from robot
         # just guess until you get something right
-        distance = float(500) / 148000 * area
-        #print "DISTANCE: ", area 
+        print "AREA: ", area 
 
         # find angle
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
         difference = x_center - image_center[0]    # just need x-diff
+        distance = float(AREA_CONST)*(float(343)/difference)*math.sqrt(area)
+        print "DIFF", difference
         if (distance == 0):
             distance = 1
         angle = math.degrees(math.atan(float(difference) / distance))
@@ -165,11 +184,22 @@ while (True):
     image = cv2.imread(filename)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
+    #hsv = get_upside_down(hsv)
+    #grey = get_upside_down(grey)    
+
     # detect the sign type
     canny = get_canny(grey, hsv)
     angle, sign = determine_sign(image, canny)
     print sign, angle    
     # calculate the angle
+
+    # calculate the speed of the motor for displaying   
+    try:
+        lcd.clear()
+        #lcd.message("PATRICK")
+        lcd.message('Sign:%s\nAngle deg:%d' % (sign, int(angle)))
+    except IOError:
+        flag = 123
+
 
 

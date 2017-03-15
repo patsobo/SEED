@@ -27,7 +27,7 @@ def get_image():
 
 # make image go upside-down
 def get_upside_down(image):
-    rows, cols = image.shape
+    rows, cols = image.shape[0], image.shape[1]
 
     M = cv2.getRotationMatrix2D((cols/2, rows/2), 180, 1)
     return cv2.warpAffine(image, M, (cols, rows))
