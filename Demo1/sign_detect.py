@@ -23,16 +23,12 @@ print "Found LCD."
 RESOLUTION = (1020, 768)
 STOP_TEMPLATE = cv2.imread("images/Stop_template.jpg", 1)
 STOP_TEMPLATE_2 = cv2.imread("images/Stop_template_2.jpg", 1)
-STOP_POINTS = [(217, 245), (217, 800), (800, 161), (800, 485), (1105, 326)]
+#STOP_POINTS = [(217, 245), (217, 800), (800, 161), (800, 485), (1105, 326)]
 LEFT_TEMPLATE = cv2.imread("images/Turn_Left.png", 1)
-LEFT_POINTS = [(480, 161), (480, 488), (175, 326), (217, 800), (1064, 242), (1062, 804)]
+#LEFT_POINTS = [(480, 161), (480, 488), (175, 326), (217, 800), (1064, 242), (1062, 804)]
 RIGHT_TEMPLATE = cv2.imread("images/Turn_Right.png", 1)
-RIGHT_POINTS = [(217, 245), (217, 800), (800, 161), (800, 485), (1105, 326)]
+#RIGHT_POINTS = [(217, 245), (217, 800), (800, 161), (800, 485), (1105, 326)]
 SIGN_DIM = (1280, 962)
-
-# for the tracking vector
-prev_image = -1 
-prev_points = -1
 
 def matches_template(warped, template):
     template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
@@ -101,48 +97,6 @@ def determine_sign(image, canny):
         # get center of sign in image
         approx = np.squeeze(approx)
         x_center = (approx[0][0] + approx[1][0] + approx[2][0] + approx[3][0]) / 4
-#
-#        # scale important lists to match scaled image size
-#        live_dim = (warped.shape[1], warped.shape[0])
-#        scale = (float(SIGN_DIM[0]) / live_dim[0], float(SIGN_DIM[1]) / live_dim[1])
-#        points = scale_points(scale, points)
-#
-#        # change points to be four corners
-#        points = [(0, 0), (0, warped.shape[0]), (warped.shape[1], 0), (warped.shape[1], warped.shape[0])]
-#
-#        # test matrix
-#        #draw_points(warped, points)
-#
-#        # map the points to the actual captured image
-#        M[1][1] += 10^-6 # to avoid a singular matrix error
-#        inverse = np.linalg.inv(M)
-#        result = []
-#        for point in points:
-#            point = [point[0], point[1], 1] # convert points to 3D
-#            point = (np.asarray(point)).reshape(3, 1)
-#            new_point = (np.dot(inverse, point))
-#            #new_point = np.transpose(new_point)
-#            #new_point = [p / new_point[2] for p in new_point]    # normalize z
-#            result.append((new_point[0][0] / new_point[2][0], -1*new_point[1][0] / new_point[2][0]))
-#            print "result", result
-#        draw_points(image, center)
-#
-#        # get the optical vector or w/e
-#        if (prev_image != -1 and prev_points != -1):
-#            cv2.calcOpticalFlowPyrLK(prev_image, image, prev_points, points)
-#            prev_image = image
-#            prev_points = points
-#        else:
-#            prev_image = image
-#            prev_points = points
-        
-        # find only the good points
-        #cv2.findHomography()
-
-        # find approximate distance of sign from robot
-        # just guess until you get something right
-        print "AREA: ", area 
-
         # find angle
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
         difference = x_center - image_center[0]    # just need x-diff
@@ -184,8 +138,6 @@ while (True):
     image = cv2.imread(filename)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    #hsv = get_upside_down(hsv)
-    #grey = get_upside_down(grey)    
 
     # detect the sign type
     canny = get_canny(grey, hsv)
@@ -201,5 +153,51 @@ while (True):
     except IOError:
         flag = 123
 
+
+
+
+################### CODE THAT I'M WORKING ON THAT MAY BE USED IN THE FUTURE???? ##########################
+
+#
+#        # scale important lists to match scaled image size
+#        live_dim = (warped.shape[1], warped.shape[0])
+#        scale = (float(SIGN_DIM[0]) / live_dim[0], float(SIGN_DIM[1]) / live_dim[1])
+#        points = scale_points(scale, points)
+#
+#        # change points to be four corners
+#        points = [(0, 0), (0, warped.shape[0]), (warped.shape[1], 0), (warped.shape[1], warped.shape[0])]
+#
+#        # test matrix
+#        #draw_points(warped, points)
+#
+#        # map the points to the actual captured image
+#        M[1][1] += 10^-6 # to avoid a singular matrix error
+#        inverse = np.linalg.inv(M)
+#        result = []
+#        for point in points:
+#            point = [point[0], point[1], 1] # convert points to 3D
+#            point = (np.asarray(point)).reshape(3, 1)
+#            new_point = (np.dot(inverse, point))
+#            #new_point = np.transpose(new_point)
+#            #new_point = [p / new_point[2] for p in new_point]    # normalize z
+#            result.append((new_point[0][0] / new_point[2][0], -1*new_point[1][0] / new_point[2][0]))
+#            print "result", result
+#        draw_points(image, center)
+#
+#        # get the optical vector or w/e
+#        if (prev_image != -1 and prev_points != -1):
+#            cv2.calcOpticalFlowPyrLK(prev_image, image, prev_points, points)
+#            prev_image = image
+#            prev_points = points
+#        else:
+#            prev_image = image
+#            prev_points = points
+        
+        # find only the good points
+        #cv2.findHomography()
+
+        # find approximate distance of sign from robot
+        # just guess until you get something right
+        print "AREA: ", area 
 
 
