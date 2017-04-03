@@ -49,7 +49,7 @@ def matches_template(warped, template):
             if (pixel == my_pixel):
                 match_sum += 1    
     #print "MATHC", float(match_sum) / total_pixels
-    return (float(match_sum) / total_pixels >= 0.75)
+    return (float(match_sum) / total_pixels >= 0.85)
 
 def determine_sign(image, canny):
     contours = get_contours(canny)
@@ -141,13 +141,11 @@ def determine_sign(image, canny):
 
         # find approximate distance of sign from robot
         # just guess until you get something right
-        print "AREA: ", area 
 
         # find angle
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
         difference = x_center - image_center[0]    # just need x-diff
-        distance = float(AREA_CONST)*(float(343)/difference)*math.sqrt(area)
-        print "DIFF", difference
+        distance = float(AREA_CONST)*(float(343)/abs(difference))*math.sqrt(area)
         if (distance == 0):
             distance = 1
         angle = math.degrees(math.atan(float(difference) / distance))
