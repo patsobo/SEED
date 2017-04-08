@@ -18,7 +18,6 @@ while (flag == -1):
         flag = -1
 print "Found LCD."
 
-
 # constants
 RESOLUTION = (1020, 768)
 STOP_TEMPLATE = cv2.imread("images/Stop_template.jpg", 1)
@@ -45,7 +44,7 @@ def matches_template(warped, template):
             if (pixel == my_pixel):
                 match_sum += 1    
     #print "MATHC", float(match_sum) / total_pixels
-    return (float(match_sum) / total_pixels >= 0.85)
+    return (float(match_sum) / total_pixels >= 0.80)
 
 def determine_sign(image, canny):
     contours = get_contours(canny)
@@ -77,17 +76,17 @@ def determine_sign(image, canny):
         # compare against the templates
         if (matches_template(warped, STOP_TEMPLATE) or matches_template(warped, STOP_TEMPLATE_2)):
             sign = "Stop"
-            points = STOP_POINTS
+            #points = STOP_POINTS
             AREA_CONST = 9
             SIGN_DIM  = [100, 100]
         if (matches_template(warped, LEFT_TEMPLATE)):
             sign = "Left"
             AREA_CONST = 6.45
-            points = LEFT_POINTS
+            #points = LEFT_POINTS
         elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right"
             AREA_CONST = 6.45        
-            points = RIGHT_POINTS
+            #points = RIGHT_POINTS
         #display_image("canny", warped)
         #draw_contours(image, approx)
 
@@ -142,6 +141,7 @@ def determine_sign(image, canny):
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
         difference = x_center - image_center[0]    # just need x-diff
         distance = float(AREA_CONST)*(float(343)/abs(difference))*math.sqrt(area)
+
         if (distance == 0):
             distance = 1
         angle = math.degrees(math.atan(float(difference) / distance))
@@ -182,13 +182,36 @@ while (True):
     # detect the sign type
     canny = get_canny(grey, hsv)
     angle, sign = determine_sign(image, canny)
-    print sign, angle    
+    distance = measure_distance()
+    print "DISTANCE", distance
+    print sign, angle   
     # calculate the angle
+
+    if abs(angle) > 5:
+        writeNumber(int(angle))
+        print "angle", angle
+        time.sleep(0.5)
+    else:
+        writeNumber(101)
+        print(101)
+        time.sleep(0.1)
+    if distance < 50:
+        if sign == "Left":
+            writeNumber(103)
+            print(103)
+        elif sign == "Right":
+            writeNumber(104)
+            print(104)
+        elif sign == "Stop":
+            writeNumber(102)
+            print(102)
+        time.sleep(0.1)
+    print "-------------"
 
     # calculate the speed of the motor for displaying   
     try:
         lcd.clear()
-        #lcd.message("PATRICK")
+        lcd.message("PATRICK")
         lcd.message('Sign:%s\nAngle deg:%d' % (sign, int(angle)))
     except IOError:
         flag = 123
@@ -238,6 +261,6 @@ while (True):
 
         # find approximate distance of sign from robot
         # just guess until you get something right
-        print "AREA: ", area 
+        #print "AREA: ", area 
 
 

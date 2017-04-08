@@ -3,13 +3,28 @@ Helping stuff for detecting a yellow sign
 
 '''
 import time
+import subprocess
 import cv2
 import picamera
 import numpy as np
+import smbus
+import RPi.GPIO as GPIO
 import sys # for command line arguments
 from transform import order_points, four_point_transform    # the imagesearch crap
 
 YELLOW_BOUNDS = ([15, 100, 100], [30, 255, 255])
+
+GPIO.setmode(GPIO.BCM)
+
+# ultrasonic sensor setup
+TRIG = 23 
+ECHO = 24
+GPIO.setup(TRIG,GPIO.OUT) #trigger
+GPIO.setup(ECHO,GPIO.IN)  #echo
+GPIO.output(TRIG,False)   #initial settings
+
+bus = smbus.SMBus(1)
+address = 0x04
 
 # make image go upside-down
 def get_upside_down(image):
@@ -111,4 +126,76 @@ def get_canny(grey, hsv):
     canny = cv2.Canny(grey, 100, 350)
     return canny
 
+################ COMM FUNCTIONS ###########################
+def writeNumber(value):
+    # run even when dumb exception occurs
+    print "Beginning sending"
+    try:
+        bus.write_byte(address, value)
+        print "Success sending"
+    except IOError:
+        #subprocess.call(['i2cdetect', '-y', '1'])
+        flag = 1     #optional flag to signal your code to resend or something
+    
+    # bus.write_byte_data(address, 0, value)
+    return -1
+
+def readNumber():
+    number = bus.read_byte(address)
+    # number = bus.read_byte_data(address, 1)
+    return number
+
+
+################## OTHER FUNCTIONS ######################################
+def measure_distance():
+    GPIO.output(TRIG,True) #set pin 31 to on
+    time.sleep(0.00001) #delay
+    GPIO.output(TRIG,False) #set pin 31 to off
+    StartTime = time.time()
+    while GPIO.input(ECHO) == 0:
+        StartTime = time.time() #constantly sets starting time to now
+    EndTime = time.time()
+    while GPIO.input(ECHO) == 1:
+        EndTime = time.time() #constantly sets ending time to now
+    #calculation for pulse duration time
+        
+    DurationTime = EndTime - StartTime
+    distance = DurationTime*17150 #changes time to distance in cm
+    return distance
+
+# jankier, but perhaps working function for distance
+def get_distance():
+    # begin doing something
+    GPIO.output(TRIG, True)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+    time.sleep(.00001)
+
+    count = 0
+    data = []
+    pulse_start = time.time()
+    while GPIO.input(ECHO) == 0:
+        data.append(GPIO.input(ECHO))
+        pulse_start = time.time()
+        count += 1
+        if count > 2000:
+            break
+#        if GPIO.input(ECHO) == 1:
+#            pulse_end = time.time()
+#            break
+#    time.sleep(.00001)
+#    print "count:", count
+    pulse_end = time.time()
+    while GPIO.input(ECHO) == 1:
+        pulse_end = time.time()
+    data = []
+    for i in range(100):
+        data.append(GPIO.input(ECHO))
+    #print data
+
+    pulse_duration = pulse_end - pulse_start
+
+    distance = pulse_duration * 17150
+    #distance = round(distance, 2)
+    return distance
 
