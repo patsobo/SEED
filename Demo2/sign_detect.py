@@ -33,7 +33,7 @@ SIGN_DIM = (1280, 962)
 
 # returns what percentage of the warped image's pixels match the given
 # template image
-def matches_template(warped, template):
+def matches_template(warped, template, matching=0.75):
     """
     Determines how closely a warped image from the real world
     matches a standard template image
@@ -57,7 +57,7 @@ def matches_template(warped, template):
             if (pixel == my_pixel):
                 match_sum += 1    
     #print "MATHC", float(match_sum) / total_pixels
-    return (float(match_sum) / total_pixels >= 0.80)
+    return (float(match_sum) / total_pixels >= matching)
 
 def determine_sign(image, canny):
     """
@@ -92,17 +92,17 @@ def determine_sign(image, canny):
 
         AREA_CONST = 1
         # compare against the templates
-        if (matches_template(warped, STOP_TEMPLATE) or matches_template(warped, STOP_TEMPLATE_2)):
-            sign = "Stop"
-            AREA_CONST = 9
-            SIGN_DIM  = [100, 100]
         if (matches_template(warped, LEFT_TEMPLATE)):
             sign = "Left"
             AREA_CONST = 6.45
         elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right"
             AREA_CONST = 6.45        
-        
+        elif (matches_template(warped, STOP_TEMPLATE, 0.90) or matches_template(warped, STOP_TEMPLATE_2, 0.90)):
+            sign = "Stop"
+            AREA_CONST = 9
+            SIGN_DIM  = [100, 100]
+
         #display_image("canny", warped)
         #draw_contours(image, approx)
 
@@ -116,6 +116,8 @@ def determine_sign(image, canny):
         # find angle
         image_center = (RESOLUTION[0] / 2, RESOLUTION[1] / 2)
         difference = x_center - image_center[0]    # just need x-diff
+        if (difference == 0):
+            difference = 1
         distance = float(AREA_CONST)*(float(343)/abs(difference))*math.sqrt(area)
 
         # prevent division by 0
@@ -169,25 +171,23 @@ while (True):
     print "DISTANCE", distance
     print sign, angle   
 
-    if abs(angle) > 5:
-        writeNumber(int(angle))
-        print "ANGLE", angle
-        time.sleep(0.5)
+    if sign != "None":
+        if abs(angle) < 30 and abs(angle) > 2:
+            writeNumber(int(angle) + 30)
+            time.sleep(0.5)
+        else:
+            writeNumber(101)
+            #time.sleep(0.1)
+        if distance < 60:
+            if sign == "Left":
+                writeNumber(103)
+            elif sign == "Right":
+                writeNumber(104)
+            elif sign == "Stop":
+                writeNumber(102)
+            #time.sleep(0.1)
     else:
-        writeNumber(101)
-        print(101)
-        time.sleep(0.1)
-    if distance < 50:
-        if sign == "Left":
-            writeNumber(103)
-            print(103)
-        elif sign == "Right":
-            writeNumber(104)
-            print(104)
-        elif sign == "Stop":
-            writeNumber(102)
-            print(102)
-        time.sleep(0.1)
+        writeNumber(105)
     print "-------------"
 
     # calculate the speed of the motor for displaying   
