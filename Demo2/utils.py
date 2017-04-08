@@ -88,6 +88,7 @@ def is_sign(points):
             return False            
     return True 
 
+# standard pythagorean theorem function
 def get_distance(point1, point2):
     diff1 = abs(point2[0] - point1[0])
     diff2 = abs(point2[1] - point1[1])
@@ -129,10 +130,9 @@ def get_canny(grey, hsv):
 ################ COMM FUNCTIONS ###########################
 def writeNumber(value):
     # run even when dumb exception occurs
-    print "Beginning sending"
     try:
+        print "Sending", value
         bus.write_byte(address, value)
-        print "Success sending"
     except IOError:
         #subprocess.call(['i2cdetect', '-y', '1'])
         flag = 1     #optional flag to signal your code to resend or something
@@ -146,7 +146,7 @@ def readNumber():
     return number
 
 
-################## OTHER FUNCTIONS ######################################
+################## ULTRASONIC FUNCTIONS ######################################
 def measure_distance():
     GPIO.output(TRIG,True) #set pin 31 to on
     time.sleep(0.00001) #delay
