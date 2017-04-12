@@ -41,6 +41,7 @@ def display_image(title, image):
     cv2.waitKey(0)
     return
 
+# draw contours
 def draw_contours(original, approx):
     cv2.drawContours(original, [approx], -1, (0, 255, 0), 3)
     
