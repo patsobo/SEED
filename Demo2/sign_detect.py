@@ -98,7 +98,7 @@ def determine_sign(image, canny):
         elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right"
             AREA_CONST = 6.45        
-        elif (matches_template(warped, STOP_TEMPLATE, 0.95) or matches_template(warped, STOP_TEMPLATE_2, 0.95)):
+        elif (matches_template(warped, STOP_TEMPLATE, 0.90) or matches_template(warped, STOP_TEMPLATE_2, 0.90)):
             sign = "Stop"
             AREA_CONST = 9
             SIGN_DIM  = [100, 100]
@@ -192,7 +192,10 @@ while (True):
         if (abs(angle) < 30 and abs(angle) > 4):
             writeNumber(int(angle) + 30)
         elif (sign != "None"):
-            last_good_sign = sign
+            if (last_good_sign != "None" and last_good_sign != "Stop" and sign == "Stop"):
+                pass
+            else:
+                last_good_sign = sign
             writeNumber(101)
         elif last_good_sign != "None":
             writeNumber(101)
@@ -201,7 +204,7 @@ while (True):
     elif distance > 40:
         writeNumber(101) 
     else:
-        if (sign == "None"):
+        if (sign == "None" or sign != last_good_sign):
             sign = last_good_sign
         # execute sign command 
         if sign == "Left":
