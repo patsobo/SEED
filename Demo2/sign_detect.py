@@ -98,7 +98,7 @@ def determine_sign(image, canny):
         elif (matches_template(warped, RIGHT_TEMPLATE)):
             sign = "Right"
             AREA_CONST = 6.45        
-        elif (matches_template(warped, STOP_TEMPLATE, 0.90) or matches_template(warped, STOP_TEMPLATE_2, 0.90)):
+        elif (matches_template(warped, STOP_TEMPLATE, 0.95) or matches_template(warped, STOP_TEMPLATE_2, 0.95)):
             sign = "Stop"
             AREA_CONST = 9
             SIGN_DIM  = [100, 100]
@@ -145,18 +145,7 @@ def scale_points(scale, points):
         result.append((point[0] / scale[0], point[1] / scale[1]))
     return result
 
-# initialize the camera and grab a reference to the raw camera capture
-camera = PiCamera()
-camera.resolution = RESOLUTION
-camera.awb_mode = 'flash'
-rawCapture = PiRGBArray(camera, size=RESOLUTION)
-
-# allow the camera to warmup
-time.sleep(0.1)
-filename = "temp.jpg"
-
-# main loop
-while (True): 
+def cv_capture(camera, filename):
     # get the image
     camera.capture(filename)
     #filename = str(sys.argv[1])
@@ -167,14 +156,41 @@ while (True):
     # detect the sign type
     canny = get_canny(grey, hsv)
     angle, sign = determine_sign(image, canny)
+    print sign, angle
+    return sign, angle
+
+
+# initialize the camera and grab a reference to the raw camera capture
+camera = PiCamera()
+camera.resolution = RESOLUTION
+camera.awb_mode = 'flash'
+rawCapture = PiRGBArray(camera, size=RESOLUTION)
+
+# allow the camera to warmup
+time.sleep(0.1)
+filename = "temp.jpg"
+
+# loop to track how often to check for sign
+CV_COUNT = 7
+count = CV_COUNT 
+
+# default values
+sign = "None"
+angle = 0
+
+# main loop
+while (True):
+    if (count >= CV_COUNT):
+        sign, angle = cv_capture(camera, filename)
+        count = 0
     distance = measure_distance()
     print "DISTANCE", distance
-    print sign, angle   
 
     if sign != "None":
-        if abs(angle) < 30 and abs(angle) > 2:
+        if abs(angle) < 30 and abs(angle) > 4:
             writeNumber(int(angle) + 30)
-            time.sleep(0.5)
+            count = CV_COUNT    # re-check sign and angle immediately
+            time.sleep(0.1)
         else:
             writeNumber(101)
             #time.sleep(0.1)
@@ -187,7 +203,8 @@ while (True):
                 writeNumber(102)
             #time.sleep(0.1)
     else:
-        writeNumber(105)
+        if distance < 75:
+            writeNumber(105)
     print "-------------"
 
     # calculate the speed of the motor for displaying   
@@ -196,3 +213,5 @@ while (True):
         lcd.message('Sign:%s\nAngle deg:%d' % (sign, int(angle)))
     except IOError:
         flag = 123
+
+    count += 1
