@@ -176,37 +176,87 @@ count = CV_COUNT
 
 # default values
 sign = "None"
+prev_sign = "None"
 angle = 0
+check_cv = True
 
+last_good_sign = "None"
 # main loop
 while (True):
-    if (count >= CV_COUNT):
-        sign, angle = cv_capture(camera, filename)
-        count = 0
-    distance = measure_distance()
-    print "DISTANCE", distance
 
-    if sign != "None":
-        if abs(angle) < 30 and abs(angle) > 4:
+    # get values
+    distance = measure_distance()
+        
+    if distance > 90:
+        sign, angle = cv_capture(camera, filename)
+        if (abs(angle) < 30 and abs(angle) > 4):
             writeNumber(int(angle) + 30)
-            count = CV_COUNT    # re-check sign and angle immediately
-            time.sleep(0.1)
-        else:
+        elif (sign != "None"):
+            last_good_sign = sign
             writeNumber(101)
-            #time.sleep(0.1)
-        if distance < 60:
-            if sign == "Left":
-                writeNumber(103)
-            elif sign == "Right":
-                writeNumber(104)
-            elif sign == "Stop":
-                writeNumber(102)
-            #time.sleep(0.1)
-    else:
-        if distance < 75:
+        elif last_good_sign != "None":
+            writeNumber(101)
+        else:
             writeNumber(105)
+    elif distance > 40:
+        writeNumber(101) 
+    else:
+        if (sign == "None"):
+            sign = last_good_sign
+        # execute sign command 
+        if sign == "Left":
+            writeNumber(103)
+        elif sign == "Right":
+            writeNumber(104)
+        elif sign == "Stop":
+            writeNumber(102)
+        last_good_sign = "None"
+
+    # print message
+    print "DISTANCE", distance
+    print "SIGN", sign
     print "-------------"
 
+
+#
+#    if (count >= CV_COUNT):
+#        sign, angle = cv_capture(camera, filename)
+#        count = 0
+#    distance = measure_distance()
+#    print "DISTANCE", distance
+#    print "SIGN", sign
+#
+#    if sign != "None":
+#        if abs(angle) < 30 and abs(angle) > 4:
+#            writeNumber(int(angle) + 30)
+#            count = CV_COUNT    # re-check sign and angle immediately
+#            time.sleep(0.1)
+#        else:
+#            writeNumber(101)
+#            #time.sleep(0.1)
+#        if distance < 60:
+#            if sign == "Left":
+#                writeNumber(103)
+#                prev_sign = "None"
+#                check_cv = True
+#                count = CV_COUNT
+#            elif sign == "Right":
+#                writeNumber(104)
+#                prev_sign = "None"
+#                check_cv = True
+#                count = CV_COUNT
+#            elif sign == "Stop":# and prev_sign == "None":
+#                writeNumber(102)
+#                count = CV_COUNT
+#                check_cv = True
+#            #time.sleep(0.1)
+#        if distance < 120:
+#            check_cv = False
+#    else:
+#        if distance < 75:
+#            writeNumber(105)
+#    print "-------------"
+#
     # calculate the speed of the motor for displaying   
     try:
         lcd.clear()
@@ -215,3 +265,5 @@ while (True):
         flag = 123
 
     count += 1
+    if (sign == "Left" or sign == "Right"):
+        prev_sign = sign
