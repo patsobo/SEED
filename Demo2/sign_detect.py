@@ -187,7 +187,7 @@ while (True):
     # get values
     distance = measure_distance()
         
-    if distance > 90:
+    if distance > 90 or sign == "None":
         sign, angle = cv_capture(camera, filename)
         if (abs(angle) < 30 and abs(angle) > 4):
             writeNumber(int(angle) + 30)
